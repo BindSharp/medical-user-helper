@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "sGZQ8SfuZ0U=",
+  "success": true,
+  "projectFilePath": "/home/Gianfranco/repos/MedicalUsersHelper/Infrastructure.Core.Models/Infrastructure.Core.Models.csproj",
+  "expectedPackageFiles": [
+    "/home/Gianfranco/.nuget/packages/microsoft.aspnetcore.app.ref/9.0.9/microsoft.aspnetcore.app.ref.9.0.9.nupkg.sha512"
+  ],
+  "logs": []
+}

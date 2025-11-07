@@ -1,0 +1,182 @@
+{
+  "version": 3,
+  "targets": {
+    "net9.0": {
+      "BindSharp/1.1.0": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/BindSharp.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/BindSharp.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Infrastructure.Core.DTOs/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "compile": {
+          "bin/placeholder/Infrastructure.Core.DTOs.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Infrastructure.Core.DTOs.dll": {}
+        }
+      },
+      "Infrastructure.Core.Interfaces/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "BindSharp": "1.1.0",
+          "Infrastructure.Core.DTOs": "1.0.0",
+          "Infrastructure.Core.Models": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/Infrastructure.Core.Interfaces.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Infrastructure.Core.Interfaces.dll": {}
+        }
+      },
+      "Infrastructure.Core.Models/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "compile": {
+          "bin/placeholder/Infrastructure.Core.Models.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Infrastructure.Core.Models.dll": {}
+        }
+      },
+      "Infrastructure.Core.Services/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "Infrastructure.Core.Interfaces": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/Infrastructure.Core.Services.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Infrastructure.Core.Services.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "BindSharp/1.1.0": {
+      "sha512": "QdtWsFdwZPul/YA0NKlcTTVwABmClnD4kWszQSQ9tiRAidQqHwgy45VfYhoVXYtXxmPTxTPEpv/RyXgt5dRvSw==",
+      "type": "package",
+      "path": "bindsharp/1.1.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "bindsharp.1.1.0.nupkg.sha512",
+        "bindsharp.nuspec",
+        "icon.png",
+        "lib/netstandard2.0/BindSharp.dll",
+        "lib/netstandard2.0/BindSharp.xml"
+      ]
+    },
+    "Infrastructure.Core.DTOs/1.0.0": {
+      "type": "project",
+      "path": "../Infrastructure.Core.DTOs/Infrastructure.Core.DTOs.csproj",
+      "msbuildProject": "../Infrastructure.Core.DTOs/Infrastructure.Core.DTOs.csproj"
+    },
+    "Infrastructure.Core.Interfaces/1.0.0": {
+      "type": "project",
+      "path": "../Infrastructure.Core.Interfaces/Infrastructure.Core.Interfaces.csproj",
+      "msbuildProject": "../Infrastructure.Core.Interfaces/Infrastructure.Core.Interfaces.csproj"
+    },
+    "Infrastructure.Core.Models/1.0.0": {
+      "type": "project",
+      "path": "../Infrastructure.Core.Models/Infrastructure.Core.Models.csproj",
+      "msbuildProject": "../Infrastructure.Core.Models/Infrastructure.Core.Models.csproj"
+    },
+    "Infrastructure.Core.Services/1.0.0": {
+      "type": "project",
+      "path": "../Infrastructure.Core.Services/Infrastructure.Core.Services.csproj",
+      "msbuildProject": "../Infrastructure.Core.Services/Infrastructure.Core.Services.csproj"
+    }
+  },
+  "projectFileDependencyGroups": {
+    "net9.0": [
+      "Infrastructure.Core.Services >= 1.0.0"
+    ]
+  },
+  "packageFolders": {
+    "/home/Gianfranco/.nuget/packages/": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "/home/Gianfranco/repos/MedicalUsersHelper/Application.Core.DTOs/Application.Core.DTOs.csproj",
+      "projectName": "Application.Core.DTOs",
+      "projectPath": "/home/Gianfranco/repos/MedicalUsersHelper/Application.Core.DTOs/Application.Core.DTOs.csproj",
+      "packagesPath": "/home/Gianfranco/.nuget/packages/",
+      "outputPath": "/home/Gianfranco/repos/MedicalUsersHelper/Application.Core.DTOs/obj/",
+      "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "/home/Gianfranco/.nuget/NuGet/NuGet.Config"
+      ],
+      "originalTargetFrameworks": [
+        "net9.0"
+      ],
+      "sources": {
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "projectReferences": {
+            "/home/Gianfranco/repos/MedicalUsersHelper/Infrastructure.Core.Services/Infrastructure.Core.Services.csproj": {
+              "projectPath": "/home/Gianfranco/repos/MedicalUsersHelper/Infrastructure.Core.Services/Infrastructure.Core.Services.csproj"
+            }
+          }
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "9.0.100"
+    },
+    "frameworks": {
+      "net9.0": {
+        "targetAlias": "net9.0",
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.AspNetCore.App.Ref",
+            "version": "[9.0.9, 9.0.9]"
+          }
+        ],
+        "frameworkReferences": {
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "/var/run/host/usr/share/dotnet/sdk/9.0.110/PortableRuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}

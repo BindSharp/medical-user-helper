@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Users Helper</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<!-- App Container -->
+<div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>🏥 Med Helper</h2>
+            <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-page="dashboard">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" data-page="npi-generator">
+                <span class="nav-icon">🔢</span>
+                <span class="nav-label">NPI Generator</span>
+            </a>
+            <a href="#" class="nav-item" data-page="dea-generator">
+                <span class="nav-icon">💊</span>
+                <span class="nav-label">DEA Generator</span>
+            </a>
+            <a href="#" class="nav-item" data-page="accounts">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">Account Manager</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <p class="text-small">v1.0.0</p>
+            <p class="text-small text-muted">For Development Use</p>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Dashboard Page -->
+        <section class="page active" id="page-dashboard">
+            <header class="page-header">
+                <h1>Dashboard</h1>
+                <p class="text-muted">Welcome to Medical Users Helper</p>
+            </header>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🔢</div>
+                    <div class="stat-info">
+                        <h3 id="npiCount">0</h3>
+                        <p>NPIs Generated</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💊</div>
+                    <div class="stat-info">
+                        <h3 id="deaCount">0</h3>
+                        <p>DEAs Generated</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">👤</div>
+                    <div class="stat-info">
+                        <h3 id="accountCount">0</h3>
+                        <p>Saved Accounts</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-grid">
+                <div class="card">
+                    <h2>🚀 Quick Actions</h2>
+                    <div class="quick-actions">
+                        <button class="action-btn" data-navigate="npi-generator">
+                            <span>🔢</span>
+                            Generate NPI
+                        </button>
+                        <button class="action-btn" data-navigate="dea-generator">
+                            <span>💊</span>
+                            Generate DEA
+                        </button>
+                        <button class="action-btn" data-navigate="accounts">
+                            <span>👤</span>
+                            Manage Accounts
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>📝 Recent Activity</h2>
+                    <div id="recentActivity" class="activity-list">
+                        <p class="text-muted text-center">No recent activity</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- NPI Generator Page -->
+        <section class="page" id="page-npi-generator">
+            <header class="page-header">
+                <h1>🔢 NPI Generator</h1>
+                <p class="text-muted">Generate valid test NPIs for testing purposes</p>
+            </header>
+
+            <div class="card-grid">
+                <div class="card">
+                    <h2>Generate Individual NPI</h2>
+                    <p class="text-small text-muted mb-2">For prescribers/individual providers</p>
+
+                    <form id="npiIndividualForm" class="form">
+                        <div class="form-group">
+                            <label for="npiIndFirstName">First Name</label>
+                            <input type="text" id="npiIndFirstName" placeholder="John" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="npiIndLastName">Last Name</label>
+                            <input type="text" id="npiIndLastName" placeholder="Doe" required>
+                        </div>
+
+                        <button type="submit" class="btn-primary">Generate Individual NPI</button>
+                    </form>
+
+                    <div class="result-box" id="npiIndividualResult"></div>
+                </div>
+
+                <div class="card">
+                    <h2>Generate Organization NPI</h2>
+                    <p class="text-small text-muted mb-2">For healthcare organizations</p>
+
+                    <form id="npiOrganizationForm" class="form">
+                        <div class="form-group">
+                            <label for="npiOrgName">Organization Name</label>
+                            <input type="text" id="npiOrgName" placeholder="Medical Center" required>
+                        </div>
+
+                        <button type="submit" class="btn-primary">Generate Organization NPI</button>
+                    </form>
+
+                    <div class="result-box" id="npiOrganizationResult"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📋 Generated NPIs History</h2>
+                <div id="npiHistory" class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Name</th>
+                            <th>NPI Number</th>
+                            <th>Generated</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="npiHistoryBody">
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No NPIs generated yet</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- DEA Generator Page -->
+        <section class="page" id="page-dea-generator">
+            <header class="page-header">
+                <h1>💊 DEA Generator</h1>
+                <p class="text-muted">Generate valid test DEA numbers for prescribers</p>
+            </header>
+
+            <div class="card-grid">
+                <div class="card">
+                    <h2>Generate DEA Number</h2>
+                    <p class="text-small text-muted mb-2">For prescriber testing</p>
+
+                    <form id="deaForm" class="form">
+                        <div class="form-group">
+                            <label for="deaFirstName">First Name</label>
+                            <input type="text" id="deaFirstName" placeholder="Jane" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="deaLastName">Last Name</label>
+                            <input type="text" id="deaLastName" placeholder="Smith" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="deaType">Registrant Type</label>
+                            <select id="deaType" required>
+                                <option value="">Select type...</option>
+                                <option value="practitioner">Practitioner (A, B, F, G)</option>
+                                <option value="hospital">Hospital/Clinic (M)</option>
+                                <option value="manufacturer">Manufacturer (L)</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn-primary">Generate DEA Number</button>
+                    </form>
+
+                    <div class="result-box" id="deaResult"></div>
+                </div>
+
+                <div class="card">
+                    <h2>ℹ️ DEA Number Info</h2>
+                    <div class="info-box">
+                        <h3>Format</h3>
+                        <p>DEA numbers consist of 2 letters + 7 digits</p>
+
+                        <h3 class="mt-2">First Letter</h3>
+                        <ul>
+                            <li><strong>A, B, F, G:</strong> Practitioner</li>
+                            <li><strong>M:</strong> Hospital/Clinic</li>
+                            <li><strong>L:</strong> Manufacturer</li>
+                        </ul>
+
+                        <h3 class="mt-2">Second Letter</h3>
+                        <p>First letter of registrant's last name</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📋 Generated DEAs History</h2>
+                <div id="deaHistory" class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>DEA Number</th>
+                            <th>Type</th>
+                            <th>Generated</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="deaHistoryBody">
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No DEAs generated yet</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Account Manager Page -->
+        <section class="page" id="page-accounts">
+            <header class="page-header">
+                <h1>👤 Account Manager</h1>
+                <p class="text-muted">Manage platform credentials securely</p>
+            </header>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-header-with-action">
+                        <h2>Add New Account</h2>
+                        <button class="btn-secondary btn-sm" id="clearAccountForm">Clear</button>
+                    </div>
+
+                    <form id="accountForm" class="form">
+                        <input type="hidden" id="accountId" value="">
+
+                        <div class="form-group">
+                            <label for="accountPlatform">Platform/Domain</label>
+                            <input type="text" id="accountPlatform" placeholder="example.com" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="accountUsername">Username</label>
+                            <input type="text" id="accountUsername" placeholder="user@example.com" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="accountPassword">Password</label>
+                            <div class="password-input">
+                                <input type="password" id="accountPassword" placeholder="••••••••" required>
+                                <button type="button" class="toggle-password" data-target="accountPassword">👁️</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="accountNotes">Notes (Optional)</label>
+                            <textarea id="accountNotes" placeholder="Additional information..." rows="3"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn-primary" id="accountSubmitBtn">Save Account</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>🔍 Search Accounts</h2>
+                    <div class="form-group">
+                        <input type="text" id="accountSearch" placeholder="Search by platform or username...">
+                    </div>
+
+                    <div class="info-box">
+                        <h3>⚠️ Security Notice</h3>
+                        <p class="text-small">
+                            Accounts are stored locally in an encrypted SQLite database.
+                            Never share this database file or store it in version control.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header-with-action">
+                    <h2>📋 Saved Accounts</h2>
+                    <button class="btn-secondary btn-sm" id="refreshAccounts">Refresh</button>
+                </div>
+
+                <div id="accountsList" class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>Platform</th>
+                            <th>Username</th>
+                            <th>Password</th>
+                            <th>Notes</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="accountsTableBody">
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No accounts saved yet</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Notification Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Load Scripts -->
+<script src="js/photino-bridge.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

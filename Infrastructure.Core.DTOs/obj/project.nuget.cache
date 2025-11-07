@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "EGw/USK/TLY=",
+  "success": true,
+  "projectFilePath": "/home/Gianfranco/repos/MedicalUsersHelper/Infrastructure.Core.DTOs/Infrastructure.Core.DTOs.csproj",
+  "expectedPackageFiles": [
+    "/home/Gianfranco/.nuget/packages/microsoft.aspnetcore.app.ref/9.0.9/microsoft.aspnetcore.app.ref.9.0.9.nupkg.sha512"
+  ],
+  "logs": []
+}
