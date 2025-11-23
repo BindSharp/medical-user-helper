@@ -7,4 +7,5 @@ namespace Infrastructure.Core.Interfaces.NationalProviderIdentifier;
 public interface INationalProviderIdentifierRepository
 {
     Task<Result<Unit, NationalProviderIdentifierError>> AddAsync(NationalProviderIdentifierNumber npiNumber);
+    Task<Result<IEnumerable<NationalProviderIdentifierNumber>, NationalProviderIdentifierError>> GetAllAsync();
 }

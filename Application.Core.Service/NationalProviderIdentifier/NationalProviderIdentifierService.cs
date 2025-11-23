@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Text;
 using Application.Core.DTOs.NationalProviderIdentifier;
 using Application.Core.Interfaces.NationalProviderIdentifier;
@@ -30,7 +31,6 @@ public sealed class NationalProviderIdentifierService : INationalProviderIdentif
     
         return await _nationalProviderIdentifierRepository
             .AddAsync(npiNumber)
-            .MapErrorAsync(NationalProviderIdentifierError (error) => error)
             .MapAsync(_ => new CreateNationalProviderIdentifierResponse
             {
                 NationalProviderIdentifier = npiNumber.NationalProviderIdentifier
@@ -49,6 +49,11 @@ public sealed class NationalProviderIdentifierService : INationalProviderIdentif
                 n => ValidateLuhnCheckDigit(n),
                 new NationalProviderIdentifierValidationError("NPI failed Luhn check digit validation"))
             .Map(_ => new ValidateNationalProviderIdentifierResponse(true));
+
+    public async Task<Result<ImmutableArray<NationalProviderIdentifierNumber>, NationalProviderIdentifierError>> GetAllAsync() =>     
+        await _nationalProviderIdentifierRepository
+            .GetAllAsync()
+            .MapAsync(result => result.ToImmutableArray());
 
     private static StringBuilder GetFirstDigit(bool isOrganization)
         => new StringBuilder(10).Insert(0, isOrganization ? "2" : "1");

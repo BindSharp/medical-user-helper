@@ -17,7 +17,7 @@ public sealed class LicenseNumberRepository : BaseDatabaseService, ILicenseNumbe
 
     public async Task<Result<Unit, LicenseNumberError>> AddAsync(LicenseNumber licenseNumber) =>
         await ResultExtensions.TryAsync(
-                operation: async () => await ExecuteInsertAsync(_connection, LicenseNumberSql.Insert, licenseNumber),
+                operation: async () => await ExecuteNonQueryAsync(_connection, LicenseNumberSql.Insert, licenseNumber),
                 errorFactory: LicenseNumberError (ex) => new LicenseNumberInsertError(ex.Message, ex)
             )
             .BindAsync(affectedRows => ValidateAffectedRows<LicenseNumberError>(

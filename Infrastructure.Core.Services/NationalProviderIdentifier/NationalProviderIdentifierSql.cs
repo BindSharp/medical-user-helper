@@ -8,4 +8,12 @@ public static class NationalProviderIdentifierSql
                                  VALUES
                                      (@NationalProviderIdentifierNumberId, @NationalProviderIdentifier, @CreatedAt)
                                  """;
+                                 
+    public const string GetAll = """
+                                 SELECT
+                                    NationalProviderIdentifierNumberId
+                                    , NationalProviderIdentifier
+                                    , CreatedAt
+                                 FROM "NationalProviderIdentifierNumber"
+                                 """;         
 }

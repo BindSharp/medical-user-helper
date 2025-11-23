@@ -1,6 +1,5 @@
 using System.Data;
 using BindSharp;
-using Dapper;
 using Infrastructure.Core.DTOs.DEARegistrationNumber;
 using Infrastructure.Core.Interfaces.DEARegistrationNumber;
 using Infrastructure.Core.Models.DEARegistrationNumber;
@@ -18,7 +17,7 @@ public sealed class NdeaRegistrationNumberRepository : BaseDatabaseService, INde
     
     public async Task<Result<Unit, NdeaRegistrationNumberError>> AddAsync(NarcoticDrugEnforcementAddictionNumber ndeaNumber) =>
         await ResultExtensions.TryAsync(
-                operation: async () => await ExecuteInsertAsync(_connection, NdeaRegistrationNumberSql.Insert, new
+                operation: async () => await ExecuteNonQueryAsync(_connection, NdeaRegistrationNumberSql.Insert, new
                 {
                     NdeaRegistrationNumberId = ndeaNumber.NarcoticDrugEnforcementAddictionNumberId,
                     NdeaRegistrationNumberValue = ndeaNumber.NarcoticDrugEnforcementAddictionNumberValue,

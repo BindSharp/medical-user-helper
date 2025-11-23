@@ -1,6 +1,5 @@
 using System.Data;
 using BindSharp;
-using Dapper;
 using Infrastructure.Core.DTOs.DEARegistrationNumber;
 using Infrastructure.Core.Interfaces.DEARegistrationNumber;
 using Infrastructure.Core.Models.DEARegistrationNumber;
@@ -18,7 +17,7 @@ public sealed class DeaRegistrationNumberRepository : BaseDatabaseService, IDeaR
     
     public async Task<Result<Unit, DeaRegistrationNumberError>> AddAsync(DeaRegistrationNumber deaNumber) =>
         await ResultExtensions.TryAsync(
-                operation: async () => await ExecuteInsertAsync(_connection, DeaRegistrationNumberSql.Insert, deaNumber),
+                operation: async () => await ExecuteNonQueryAsync(_connection, DeaRegistrationNumberSql.Insert, deaNumber),
                 errorFactory: DeaRegistrationNumberError (ex) => new DeaRegistrationNumberInsertError(ex.Message, ex)
             )
             .BindAsync(affectedRows => ValidateAffectedRows<DeaRegistrationNumberError>(
@@ -26,14 +25,4 @@ public sealed class DeaRegistrationNumberRepository : BaseDatabaseService, IDeaR
                 msg => new DeaRegistrationNumberInsertError(msg),
                 "Error inserting the DEA number."
             ));
-    
-    private async Task<int> ExecuteInsertAsync(DeaRegistrationNumber deaNumber)
-    {
-        return await _connection.ExecuteAsync(DeaRegistrationNumberSql.Insert, new
-        {
-            deaNumber.DeaRegistrationNumberId,
-            deaNumber.DeaRegistrationNumberValue,
-            deaNumber.CreatedAt
-        });
-    }
 }

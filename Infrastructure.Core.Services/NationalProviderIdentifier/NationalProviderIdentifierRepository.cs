@@ -1,6 +1,5 @@
 using System.Data;
 using BindSharp;
-using Dapper;
 using Infrastructure.Core.DTOs.NationalProviderIdentifier;
 using Infrastructure.Core.Interfaces.NationalProviderIdentifier;
 using Infrastructure.Core.Models.NationalProviderIdentifier;
@@ -16,9 +15,9 @@ public sealed class NationalProviderIdentifierRepository : BaseDatabaseService, 
         _connection = connection;
     }
     
-    public Task<Result<Unit, NationalProviderIdentifierError>> AddAsync(NationalProviderIdentifierNumber npiNumber) =>
-        ResultExtensions.TryAsync(
-                operation: async () => await ExecuteInsertAsync(npiNumber),
+    public async Task<Result<Unit, NationalProviderIdentifierError>> AddAsync(NationalProviderIdentifierNumber npiNumber) =>
+        await ResultExtensions.TryAsync(
+                operation: async () => await ExecuteNonQueryAsync(_connection, NationalProviderIdentifierSql.Insert, npiNumber),
                 errorFactory: NationalProviderIdentifierError (ex) => new NationalProviderIdentifierInsertError(ex.Message, ex)
             )
             .BindAsync(affectedRows => ValidateAffectedRows(
@@ -26,13 +25,9 @@ public sealed class NationalProviderIdentifierRepository : BaseDatabaseService, 
                 "Error inserting the NPI number."
             ));
 
-    private async Task<int> ExecuteInsertAsync(NationalProviderIdentifierNumber npiNumber)
-    {
-        return await _connection.ExecuteAsync(NationalProviderIdentifierSql.Insert, new
-        {
-            npiNumber.NationalProviderIdentifierNumberId,
-            npiNumber.NationalProviderIdentifier,
-            npiNumber.CreatedAt
-        });
-    }
+    public async Task<Result<IEnumerable<NationalProviderIdentifierNumber>, NationalProviderIdentifierError>> GetAllAsync() =>
+        await ResultExtensions.TryAsync(
+                operation: async () => await ExecuteQueryAsync<NationalProviderIdentifierNumber>(_connection, NationalProviderIdentifierSql.GetAll),
+                errorFactory: NationalProviderIdentifierError (ex) => new GetAllNationalProviderIdentifiersError(ex.Message, ex)
+            );
 }
