@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "YXdlBkwpmxc=",
+  "dgSpecHash": "QL0Rm6z7UsU=",
   "success": true,
   "projectFilePath": "/home/Gianfranco/repos/MedicalUsersHelper/Infrastructure.Core.Services/Infrastructure.Core.Services.csproj",
   "expectedPackageFiles": [
-    "/home/Gianfranco/.nuget/packages/bindsharp/1.1.0/bindsharp.1.1.0.nupkg.sha512",
+    "/home/Gianfranco/.nuget/packages/bindsharp/1.2.1/bindsharp.1.2.1.nupkg.sha512",
+    "/home/Gianfranco/.nuget/packages/dapper/2.1.66/dapper.2.1.66.nupkg.sha512",
     "/home/Gianfranco/.nuget/packages/microsoft.aspnetcore.app.ref/9.0.9/microsoft.aspnetcore.app.ref.9.0.9.nupkg.sha512"
   ],
   "logs": []

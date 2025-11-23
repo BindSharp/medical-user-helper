@@ -7,7 +7,7 @@
  * - Request/Response: const result = await photinoBridge.request('command', payload)
  */
 
-class PhotoinoBridge {
+class PhotinoBridge {
     constructor() {
         this.listeners = new Map();
         this.pendingRequests = new Map();
@@ -18,7 +18,7 @@ class PhotoinoBridge {
             this.handleMessage(message);
         });
 
-        console.log('[PhotoinoBridge] Initialized');
+        console.log('[PhotinoBridge] Initialized');
     }
 
     /**
@@ -27,6 +27,7 @@ class PhotoinoBridge {
      * @param {any} payload - The payload (will be JSON stringified if object)
      */
     send(command, payload = '') {
+        debugger;
         let message;
 
         if (typeof payload === 'object') {
@@ -35,7 +36,7 @@ class PhotoinoBridge {
             message = `${command}:${payload}`;
         }
 
-        console.log('[PhotoinoBridge] Sending:', message);
+        console.log('[PhotinoBridge] Sending:', message);
         window.external.sendMessage(message);
     }
 
@@ -49,7 +50,7 @@ class PhotoinoBridge {
             this.listeners.set(command, []);
         }
         this.listeners.get(command).push(callback);
-        console.log(`[PhotoinoBridge] Registered listener for: ${command}`);
+        console.log(`[PhotinoBridge] Registered listener for: ${command}`);
     }
 
     /**
@@ -74,18 +75,18 @@ class PhotoinoBridge {
      * @param {number} timeout - Timeout in ms (default 5000)
      * @returns {Promise<any>} The response data
      */
-    request(command, payload = '', timeout = 5000) {
+    request(command, payload = '', timeout = 10000) {
         return new Promise((resolve, reject) => {
-            const id = ++this.requestId;
-            const requestCommand = `${command}:request:${id}`;
+            debugger;
+            const requestCommand = `${command}:request:${this.requestId}`;
 
             // Store the pending request
             const timer = setTimeout(() => {
-                this.pendingRequests.delete(id);
+                this.pendingRequests.delete(this.requestId);
                 reject(new Error(`Request timeout: ${command}`));
             }, timeout);
 
-            this.pendingRequests.set(id, { resolve, reject, timer, command });
+            this.pendingRequests.set(this.requestId, { resolve, reject, timer, command });
 
             // Send the request
             this.send(requestCommand, payload);
@@ -97,34 +98,39 @@ class PhotoinoBridge {
      * @private
      */
     handleMessage(message) {
-        console.log('[PhotoinoBridge] Received:', message);
+        debugger;
+        console.log('[PhotinoBridge] Received:', message);
 
-        const separatorIndex = message.indexOf(':');
-        if (separatorIndex === -1) {
-            console.warn('[PhotoinoBridge] Invalid message format:', message);
+        // Message format: "command:response:id:json" or "command:json"
+        // We need to intelligently parse this
+
+        const parts = message.split(':');
+        if (parts.length < 2) {
+            console.warn('[PhotinoBridge] Invalid message format:', message);
             return;
         }
 
-        const command = message.substring(0, separatorIndex);
-        const payloadStr = message.substring(separatorIndex + 1);
+        const command = parts[0];
 
-        // Try to parse as JSON, otherwise use as string
-        let payload;
-        try {
-            payload = JSON.parse(payloadStr);
-        } catch {
-            payload = payloadStr;
-        }
+        // Check if this is a response format: "command:response:id:json"
+        if (parts.length >= 4 && parts[1] === 'response') {
+            const id = parseInt(parts[2]);
+            // Everything after "command:response:id:" is the JSON
+            const jsonStart = parts[0].length + parts[1].length + parts[2].length + 3; // +3 for the three colons
+            const payloadStr = message.substring(jsonStart);
 
-        // Check if this is a response to a pending request
-        const requestMatch = command.match(/^(.+):response:(\d+)$/);
-        if (requestMatch) {
-            const [, originalCommand, id] = requestMatch;
-            const pending = this.pendingRequests.get(parseInt(id));
+            let payload;
+            try {
+                payload = JSON.parse(payloadStr);
+            } catch (e) {
+                console.error('[PhotinoBridge] Failed to parse response JSON:', payloadStr, e);
+                payload = payloadStr;
+            }
 
+            const pending = this.pendingRequests.get(id);
             if (pending) {
                 clearTimeout(pending.timer);
-                this.pendingRequests.delete(parseInt(id));
+                this.pendingRequests.delete(id);
 
                 if (payload.success === false || payload.error) {
                     pending.reject(new Error(payload.error || 'Request failed'));
@@ -135,13 +141,25 @@ class PhotoinoBridge {
             return;
         }
 
+        // Regular message format: "command:payload"
+        const separatorIndex = message.indexOf(':');
+        const payloadStr = message.substring(separatorIndex + 1);
+
+        // Try to parse as JSON, otherwise use as string
+        let payload;
+        try {
+            payload = JSON.parse(payloadStr);
+        } catch {
+            payload = payloadStr;
+        }
+
         // Trigger all listeners for this command
         if (this.listeners.has(command)) {
             this.listeners.get(command).forEach(callback => {
                 try {
                     callback(payload);
                 } catch (error) {
-                    console.error(`[PhotoinoBridge] Error in listener for ${command}:`, error);
+                    console.error(`[PhotinoBridge] Error in listener for ${command}:`, error);
                 }
             });
         }
@@ -164,7 +182,7 @@ class PhotoinoBridge {
 }
 
 // Create global instance
-const photinoBridge = new PhotoinoBridge();
+const photinoBridge = new PhotinoBridge();
 
 // Also expose as window.photino for convenience
 window.photino = photinoBridge;

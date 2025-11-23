@@ -1,14 +1,50 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Data;
+using System.Runtime.InteropServices;
+using Application.Core.Interfaces.DrugEnforcementAdministration;
+using Application.Core.Interfaces.License;
+using Application.Core.Interfaces.NationalProviderIdentifier;
+using Application.Core.Service.DrugEnforcementAdministration;
+using Application.Core.Service.License;
+using Application.Core.Service.NationalProviderIdentifier;
+using Infrastructure.Core.Interfaces.DEARegistrationNumber;
+using Infrastructure.Core.Interfaces.License;
+using Infrastructure.Core.Interfaces.NationalProviderIdentifier;
+using Infrastructure.Core.Services.DEARegistrationNumber;
+using Infrastructure.Core.Services.License;
+using Infrastructure.Core.Services.NationalProviderIdentifier;
+using MedicalUsersHelper.DatabaseHelpers;
 using MedicalUsersHelper.MessageHandlers;
+using MedicalUsersHelper.MessageHandlers.Handlers;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using Photino.NET;
 
+var databasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "medical-helper.db");
+var databaseInitializer = new DatabaseInitializer(databasePath);
+databaseInitializer.Initialize();
+
 var services = new ServiceCollection();
 
+services.AddSingleton<IDbConnection>(sp => 
+{
+    var connection = new SqliteConnection($"Data Source={databasePath}");
+    connection.Open(); // Open immediately for use
+    return connection;
+});
+
 // Register message handlers
-//services.AddTransient<IMessageHandler, UserHandler>();
-//services.AddTransient<IMessageHandler, CalculatorHandler>();
-//services.AddTransient<IMessageHandler, TimeHandler>();
+services.AddTransient<IMessageHandler, DeaHandler>();
+services.AddTransient<IMessageHandler, LicenseHandler>();
+services.AddTransient<IMessageHandler, NpiHandler>();
+
+services.AddSingleton<IDeaRegistrationNumberRepository, DeaRegistrationNumberRepository>();
+services.AddSingleton<INdeaRegistrationNumberRepository, NdeaRegistrationNumberRepository>();
+services.AddSingleton<ILicenseNumberRepository, LicenseNumberRepository>();
+services.AddSingleton<INationalProviderIdentifierRepository, NationalProviderIdentifierRepository>();
+
+services.AddSingleton<IDrugEnforcementAdministration, DrugEnforcementAdministrationService>();
+services.AddSingleton<ILicenseNumber, LicenseNumberService>();
+services.AddSingleton<INationalProviderIdentifier, NationalProviderIdentifierService>();
 
 // Register message router
 services.AddSingleton<MessageRouter>();

@@ -2,7 +2,7 @@
   "version": 3,
   "targets": {
     "net9.0": {
-      "BindSharp/1.1.0": {
+      "BindSharp/1.2.1": {
         "type": "package",
         "compile": {
           "lib/netstandard2.0/BindSharp.dll": {
@@ -38,15 +38,15 @@
     }
   },
   "libraries": {
-    "BindSharp/1.1.0": {
-      "sha512": "QdtWsFdwZPul/YA0NKlcTTVwABmClnD4kWszQSQ9tiRAidQqHwgy45VfYhoVXYtXxmPTxTPEpv/RyXgt5dRvSw==",
+    "BindSharp/1.2.1": {
+      "sha512": "cLo6sQ89kRsiR9SIPpLB5hlVL6CEEdQfZQWojV2E2yEnxsXyt+R7HX5vpt+aKnuKznj9SBZwCSWqk4BZE64/YQ==",
       "type": "package",
-      "path": "bindsharp/1.1.0",
+      "path": "bindsharp/1.2.1",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "README.md",
-        "bindsharp.1.1.0.nupkg.sha512",
+        "bindsharp.1.2.1.nupkg.sha512",
         "bindsharp.nuspec",
         "icon.png",
         "lib/netstandard2.0/BindSharp.dll",
@@ -66,7 +66,7 @@
   },
   "projectFileDependencyGroups": {
     "net9.0": [
-      "BindSharp >= 1.1.0",
+      "BindSharp >= 1.2.1",
       "Infrastructure.Core.DTOs >= 1.0.0",
       "Infrastructure.Core.Models >= 1.0.0"
     ]
@@ -123,7 +123,7 @@
         "dependencies": {
           "BindSharp": {
             "target": "Package",
-            "version": "[1.1.0, )"
+            "version": "[1.2.1, )"
           }
         },
         "imports": [
@@ -148,7 +148,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/var/run/host/usr/share/dotnet/sdk/9.0.110/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.110/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

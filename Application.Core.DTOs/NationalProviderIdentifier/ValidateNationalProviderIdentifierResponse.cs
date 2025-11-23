@@ -1,0 +1,3 @@
+namespace Application.Core.DTOs.NationalProviderIdentifier;
+
+public sealed record ValidateNationalProviderIdentifierResponse(bool isValid);

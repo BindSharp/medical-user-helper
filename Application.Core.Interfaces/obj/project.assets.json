@@ -2,7 +2,7 @@
   "version": 3,
   "targets": {
     "net9.0": {
-      "BindSharp/1.1.0": {
+      "BindSharp/1.2.1": {
         "type": "package",
         "compile": {
           "lib/netstandard2.0/BindSharp.dll": {
@@ -11,6 +11,19 @@
         },
         "runtime": {
           "lib/netstandard2.0/BindSharp.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Dapper/2.1.66": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/Dapper.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Dapper.dll": {
             "related": ".xml"
           }
         }
@@ -42,7 +55,7 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
         "dependencies": {
-          "BindSharp": "1.1.0",
+          "BindSharp": "1.2.1",
           "Infrastructure.Core.DTOs": "1.0.0",
           "Infrastructure.Core.Models": "1.0.0"
         },
@@ -67,6 +80,7 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
         "dependencies": {
+          "Dapper": "2.1.66",
           "Infrastructure.Core.Interfaces": "1.0.0"
         },
         "compile": {
@@ -79,19 +93,38 @@
     }
   },
   "libraries": {
-    "BindSharp/1.1.0": {
-      "sha512": "QdtWsFdwZPul/YA0NKlcTTVwABmClnD4kWszQSQ9tiRAidQqHwgy45VfYhoVXYtXxmPTxTPEpv/RyXgt5dRvSw==",
+    "BindSharp/1.2.1": {
+      "sha512": "cLo6sQ89kRsiR9SIPpLB5hlVL6CEEdQfZQWojV2E2yEnxsXyt+R7HX5vpt+aKnuKznj9SBZwCSWqk4BZE64/YQ==",
       "type": "package",
-      "path": "bindsharp/1.1.0",
+      "path": "bindsharp/1.2.1",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "README.md",
-        "bindsharp.1.1.0.nupkg.sha512",
+        "bindsharp.1.2.1.nupkg.sha512",
         "bindsharp.nuspec",
         "icon.png",
         "lib/netstandard2.0/BindSharp.dll",
         "lib/netstandard2.0/BindSharp.xml"
+      ]
+    },
+    "Dapper/2.1.66": {
+      "sha512": "/q77jUgDOS+bzkmk3Vy9SiWMaetTw+NOoPAV0xPBsGVAyljd5S6P+4RUW7R3ZUGGr9lDRyPKgAMj2UAOwvqZYw==",
+      "type": "package",
+      "path": "dapper/2.1.66",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Dapper.png",
+        "dapper.2.1.66.nupkg.sha512",
+        "dapper.nuspec",
+        "lib/net461/Dapper.dll",
+        "lib/net461/Dapper.xml",
+        "lib/net8.0/Dapper.dll",
+        "lib/net8.0/Dapper.xml",
+        "lib/netstandard2.0/Dapper.dll",
+        "lib/netstandard2.0/Dapper.xml",
+        "readme.md"
       ]
     },
     "Application.Core.DTOs/1.0.0": {
@@ -193,7 +226,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/var/run/host/usr/share/dotnet/sdk/9.0.110/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.110/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
