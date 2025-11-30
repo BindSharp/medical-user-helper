@@ -20,8 +20,8 @@ public static class WindowExtensions
     /// </summary>
     public static void SendJsonMessage<T>(this PhotinoWindow window, string command, T data)
     {
-        var json = JsonSerializer.Serialize(data, JsonOptions);
-        var message = $"{command}:{json}";
+        string json = JsonSerializer.Serialize(data, JsonOptions);
+        string message = $"{command}:{json}";
         window.SendWebMessage(message);
     }
 

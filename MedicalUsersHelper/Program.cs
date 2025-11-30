@@ -18,13 +18,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Photino.NET;
 using System.Data;
 using System.Text;
+using MedicalUsersHelper.Logs;
 
 namespace MedicalUsersHelper;
 
 class Program
 {
     [STAThread]
-    static void Main(string[] args)
+    private static void Main(string[] args)
     {
         // Get the appropriate data directory for the platform
         string appDataDir = Path.Combine(
@@ -34,13 +35,19 @@ class Program
 
         // Ensure the directory exists
         Directory.CreateDirectory(appDataDir);
+        
+        // Create log directory
+        string logDirectory = Path.Combine(appDataDir, "logs");
+        Directory.CreateDirectory(logDirectory);
 
         // Create database path
-        var databasePath = Path.Combine(appDataDir, "medical-helper.db");
+        string databasePath = Path.Combine(appDataDir, "medical-helper.db");
         var databaseInitializer = new DatabaseInitializer(databasePath);
         databaseInitializer.Initialize();
 
         var services = new ServiceCollection();
+        
+        services.AddSingleton<IAppLogger>(sp => new FileLogger(logDirectory));
 
         services.AddSingleton<IDbConnection>(sp =>
         {
@@ -67,6 +74,12 @@ class Program
         services.AddSingleton<MessageRouter>();
 
         var serviceProvider = services.BuildServiceProvider();
+        
+        var logger = serviceProvider.GetRequiredService<IAppLogger>();
+        logger.LogInformation("Application starting...");
+        logger.LogInformation("Data directory: {0}", appDataDir);
+        logger.LogInformation("Database path: {0}", databasePath);
+        logger.LogInformation("Log directory: {0}", logDirectory);
 
         // Get the message router from DI
         var messageRouter = serviceProvider.GetRequiredService<MessageRouter>();
@@ -85,7 +98,7 @@ class Program
             {
                 contentType = "text/plain";
                 var uri = new Uri(url);
-                var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", uri.AbsolutePath.TrimStart('/'));
+                string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", uri.AbsolutePath.TrimStart('/'));
 
                 if (File.Exists(filePath))
                 {
@@ -96,13 +109,17 @@ class Program
                 return new MemoryStream(Encoding.UTF8.GetBytes("404 - File Not Found"));
             })
             .Load("wwwroot/index.html");
+        
+        logger.LogInformation("Window created and loaded");
 
         // Run the app
         window.WaitForClose();
-
+        
+        logger.LogInformation("Application shutting down");
+        (logger as IDisposable)?.Dispose();
         static string GetContentType(string filePath)
         {
-            var extension = Path.GetExtension(filePath).ToLowerInvariant();
+            string extension = Path.GetExtension(filePath).ToLowerInvariant();
             return extension switch
             {
                 ".html" => "text/html",

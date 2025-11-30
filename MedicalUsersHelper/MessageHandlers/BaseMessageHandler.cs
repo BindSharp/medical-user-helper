@@ -23,7 +23,7 @@ public abstract class BaseMessageHandler : IMessageHandler
         }
 
         // Check if it starts with a JSON character
-        var trimmed = payload.TrimStart();
+        string trimmed = payload.TrimStart();
         if (trimmed.StartsWith("{") || trimmed.StartsWith("["))
         {
             // Already JSON
@@ -31,14 +31,14 @@ public abstract class BaseMessageHandler : IMessageHandler
         }
         
         // Find the second colon (after "request:id:")
-        var firstColon = payload.IndexOf(':');
+        int firstColon = payload.IndexOf(':');
         if (firstColon == -1)
         {
             // No colon, assume it's already JSON
             return payload;
         }
 
-        var secondColon = payload.IndexOf(':', firstColon + 1);
+        int secondColon = payload.IndexOf(':', firstColon + 1);
         if (secondColon == -1)
         {
             // Only one colon, assume it's already JSON after first colon

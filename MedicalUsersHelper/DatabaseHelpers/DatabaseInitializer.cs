@@ -19,7 +19,7 @@ public sealed class DatabaseInitializer
     public void Initialize()
     {
         // Ensure directory exists
-        var directory = Path.GetDirectoryName(_databasePath);
+        string? directory = Path.GetDirectoryName(_databasePath);
         if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
         {
             Directory.CreateDirectory(directory);

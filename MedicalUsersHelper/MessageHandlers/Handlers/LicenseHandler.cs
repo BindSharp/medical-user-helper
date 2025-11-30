@@ -21,7 +21,7 @@ public sealed class LicenseHandler : BaseMessageHandler
     {
         try
         {
-            var jsonPayload = ExtractJsonFromPayload(payload);
+            string jsonPayload = ExtractJsonFromPayload(payload);
             HandleRequest<LicenseRequest>(window, jsonPayload, ProcessLicenseRequest);
         }
         catch (Exception ex)
