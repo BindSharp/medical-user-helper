@@ -1,18 +1,22 @@
 using Application.Core.DTOs.DrugEnforcementAdministration.UI;
 using Application.Core.Interfaces.DrugEnforcementAdministration;
 using BindSharp;
+using MedicalUsersHelper.Logs;
 using Photino.NET;
 
 namespace MedicalUsersHelper.MessageHandlers.Handlers;
 
 public sealed class DeaHandler : BaseMessageHandler
 {
+    private readonly IAppLogger _logger;
+    
     private readonly IDrugEnforcementAdministration _deaService;
     
     public override string Command => "dea";
 
-    public DeaHandler(IDrugEnforcementAdministration deaService)
+    public DeaHandler(IDrugEnforcementAdministration deaService, IAppLogger logger) : base(logger)
     {
+        _logger = logger;
         _deaService = deaService;
     }
 

@@ -2,18 +2,22 @@ using System.Text.Json;
 using Application.Core.DTOs.NationalProviderIdentifier.UI;
 using Application.Core.Interfaces.NationalProviderIdentifier;
 using BindSharp;
+using MedicalUsersHelper.Logs;
 using Photino.NET;
 
 namespace MedicalUsersHelper.MessageHandlers.Handlers;
 
 public sealed class NpiHandler : BaseMessageHandler
 {
+    private readonly IAppLogger _logger;
+    
     private readonly INationalProviderIdentifier _npiService;
     
     public override string Command => "npi";
 
-    public NpiHandler(INationalProviderIdentifier npiService)
+    public NpiHandler(INationalProviderIdentifier npiService, IAppLogger logger) : base(logger)
     {
+        _logger = logger;
         _npiService = npiService;
     }
 

@@ -3,18 +3,22 @@ using Application.Core.DTOs.License.UI;
 using Application.Core.Interfaces.License;
 using BindSharp;
 using Infrastructure.Core.DTOs.License;
+using MedicalUsersHelper.Logs;
 using Photino.NET;
 
 namespace MedicalUsersHelper.MessageHandlers.Handlers;
 
 public sealed class LicenseHandler : BaseMessageHandler
 {
+    private readonly IAppLogger _logger;
+    
     private readonly ILicenseNumber _licenseService;
     
     public override string Command => "license";
 
-    public LicenseHandler(ILicenseNumber licenseService)
+    public LicenseHandler(ILicenseNumber licenseService, IAppLogger logger) : base(logger)
     {
+        _logger = logger;
         _licenseService = licenseService;
     }
 

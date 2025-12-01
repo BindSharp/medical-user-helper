@@ -1,4 +1,5 @@
 using System.Text.Json;
+using MedicalUsersHelper.Logs;
 using Photino.NET;
 
 namespace MedicalUsersHelper.PhotinoHelpers;
@@ -18,10 +19,11 @@ public static class WindowExtensions
     /// Send a JSON message to JavaScript
     /// Format: "command:jsonPayload"
     /// </summary>
-    public static void SendJsonMessage<T>(this PhotinoWindow window, string command, T data)
+    public static void SendJsonMessage<T>(this PhotinoWindow window, IAppLogger logger, string command, T data)
     {
         string json = JsonSerializer.Serialize(data, JsonOptions);
         string message = $"{command}:{json}";
+        logger.LogDebug($"Request result: {command}:{json}");
         window.SendWebMessage(message);
     }
 
@@ -37,16 +39,16 @@ public static class WindowExtensions
     /// <summary>
     /// Send a success response
     /// </summary>
-    public static void SendSuccess(this PhotinoWindow window, string command, string message = "Success")
+    public static void SendSuccess(this PhotinoWindow window, IAppLogger logger, string command, string message = "Success")
     {
-        window.SendJsonMessage(command, new { success = true, message });
+        window.SendJsonMessage(logger, command, new { success = true, message });
     }
 
     /// <summary>
     /// Send an error response
     /// </summary>
-    public static void SendError(this PhotinoWindow window, string command, string error)
+    public static void SendError(this PhotinoWindow window, IAppLogger logger, string command, string error)
     {
-        window.SendJsonMessage(command, new { success = false, error });
+        window.SendJsonMessage(logger, command, new { success = false, error });
     }
 }

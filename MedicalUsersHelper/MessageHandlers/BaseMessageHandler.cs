@@ -1,6 +1,7 @@
 using System.Text.Json;
 using BindSharp;
 using MedicalUsersHelper.DTOs;
+using MedicalUsersHelper.Logs;
 using MedicalUsersHelper.PhotinoHelpers;
 using Photino.NET;
 
@@ -11,8 +12,14 @@ namespace MedicalUsersHelper.MessageHandlers;
 /// </summary>
 public abstract class BaseMessageHandler : IMessageHandler
 {
+    private readonly IAppLogger _logger;
     public abstract string Command { get; }
     public abstract void Handle(PhotinoWindow window, string payload);
+
+    protected BaseMessageHandler(IAppLogger logger)
+    {
+        _logger = logger;
+    }
 
     /// <summary>
     /// Extract JSON from payload that may be in "request:id:json" format
@@ -41,10 +48,12 @@ public abstract class BaseMessageHandler : IMessageHandler
             .Match(
                 data => {
                     handler(window, data);
+                    _logger.LogDebug($"Request successful: {Command}:response:0:{{0}}", data);
                     return Unit.Value;
                 },
                 error => {
-                    window.SendError($"{Command}:response:0", error);
+                    window.SendError(_logger, $"{Command}:response:0", error);
+                    _logger.LogDebug($"Error handling request: {Command}:response:0:{{0}}", error);
                     return Unit.Value;
                 }
             );
@@ -55,7 +64,7 @@ public abstract class BaseMessageHandler : IMessageHandler
     /// </summary>
     protected void SendSuccessResponse<T>(PhotinoWindow window, int requestId, string propertyName, T value)
     {
-        window.SendJsonMessage($"{Command}:response:{requestId}", new Dictionary<string, object>
+        window.SendJsonMessage(_logger, $"{Command}:response:{requestId}", new Dictionary<string, object>
         {
             ["success"] = true,
             [propertyName] = value!
@@ -67,7 +76,7 @@ public abstract class BaseMessageHandler : IMessageHandler
     /// </summary>
     protected void SendErrorResponse(PhotinoWindow window, int requestId, string errorMessage)
     {
-        window.SendJsonMessage($"{Command}:response:{requestId}", new
+        window.SendJsonMessage(_logger, $"{Command}:response:{requestId}", new
         {
             success = false,
             error = errorMessage

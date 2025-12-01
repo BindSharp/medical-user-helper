@@ -20,22 +20,22 @@ public sealed class MessageRouter
         
         _handlerMap = _handlers.ToDictionary(h => h.Command, h => h);
         
-        _logger.LogInformation("Registered {Count} message handlers: {Commands}", 
+        _logger.LogInformation("Registered {0} message handlers: {1}", 
             _handlerMap.Count, 
             string.Join(", ", _handlerMap.Keys));
     }
 
     public void RouteMessage(PhotinoWindow window, string message)
     {
-        _logger.LogDebug("Received message: {Message}", message);
+        _logger.LogDebug("Received message: {0}", message);
 
        ValidateMessage(message)
-           .Tap(msg => _logger.LogDebug("Message validated: {Message}", msg))
+           .Tap(msg => _logger.LogDebug("Message validated: {0}", msg))
            .Bind(ParseMessage)
-           .Tap(parsed => _logger.LogDebug("Parsed command: {Command}", parsed.Command))
+           .Tap(parsed => _logger.LogDebug("Parsed command: {0}", parsed.Command))
            .Bind(parsed => GetHandler(parsed.Command)
                .Map(handler => (handler, parsed.Payload)))
-           .Tap(tuple => _logger.LogDebug("Routing to {Handler} with payload: {Payload}", 
+           .Tap(tuple => _logger.LogDebug("Routing to {0} with payload: {1}", 
                 tuple.handler.GetType().Name, tuple.Payload))
            .Match(
                result =>
@@ -46,7 +46,7 @@ public sealed class MessageRouter
                             return Unit.Value;
                         },
                         ex => {
-                            _logger.LogError(ex, "Error handling message: {Message}", message);
+                            _logger.LogError(ex, "Error handling message: {0}", message);
                             return $"Handler error - {ex.Message}";
                         }
                     ).Match(
@@ -61,7 +61,7 @@ public sealed class MessageRouter
                 },
                 error =>
                 {
-                    _logger.LogWarning("Message routing failed: {Error}", error);
+                    _logger.LogWarning("Message routing failed: {0}", error);
                     window.SendWebMessage($"error:{error}");
                     return Unit.Value;
                 }
@@ -83,7 +83,7 @@ public sealed class MessageRouter
         
         if (separatorIndex == -1)
         {
-            _logger.LogWarning("Invalid message format (missing ':'): {Message}", message);
+            _logger.LogWarning("Invalid message format (missing ':'): {0}", message);
             return "Invalid message format. Expected 'command:payload'";
         }
 
@@ -98,7 +98,7 @@ public sealed class MessageRouter
         if (_handlerMap.TryGetValue(command, out var handler))
             return Result<IMessageHandler, string>.Success(handler);
         
-        _logger.LogWarning("No handler found for command: {Command}", command);
+        _logger.LogWarning("No handler found for command: {0}", command);
         return $"Unknown command '{command}'";
     }
 }
