@@ -1,5 +1,6 @@
 using Application.Core.DTOs.DrugEnforcementAdministration.UI;
 using Application.Core.Interfaces.DrugEnforcementAdministration;
+using BindSharp;
 using Photino.NET;
 
 namespace MedicalUsersHelper.MessageHandlers.Handlers;
@@ -17,15 +18,18 @@ public sealed class DeaHandler : BaseMessageHandler
 
     public override void Handle(PhotinoWindow window, string payload)
     {
-        try
-        {
-            var jsonPayload = ExtractJsonFromPayload(payload);
-            HandleRequest<DeaRequest>(window, jsonPayload, ProcessDeaRequest);
-        }
-        catch (Exception ex)
-        {
-            SendErrorResponse(window, 0, $"Error processing request: {ex.Message}");
-        }
+        ExtractJsonFromPayload(payload)
+            .Match(
+                jsonPayload =>
+                {
+                    HandleRequest<DeaRequest>(window, jsonPayload, ProcessDeaRequest);
+                    return Unit.Value;
+                },
+                error =>
+                {
+                    SendErrorResponse(window, 0, $"Error processing request: {error.Message}");
+                    return Unit.Value;
+                });
     }
 
     private async void ProcessDeaRequest(PhotinoWindow window, DeaRequest data)
@@ -42,31 +46,33 @@ public sealed class DeaHandler : BaseMessageHandler
 
     private async Task HandleDeaRequestAsync(PhotinoWindow window, DeaRequest data)
     {
-        var result = await _deaService.CreateDrugEnforcementAdministrationNumber(data.LastName);
-
-        if (result.IsSuccess)
-        {
-            SendSuccessResponse(window, data.RequestId, "deaNumber", 
-                result.Value.DrugEnforcementAdministrationNumber);
-        }
-        else
-        {
-            SendErrorResponse(window, data.RequestId, result.Error.Message);
-        }
+        await _deaService.CreateDrugEnforcementAdministrationNumber(data.LastName)
+            .MatchAsync(
+                response => {
+                    SendSuccessResponse(window, data.RequestId, "deaNumber", 
+                        response.DrugEnforcementAdministrationNumber);
+                    return Unit.Value;
+                },
+                error => {
+                    SendErrorResponse(window, data.RequestId, error.Message);
+                    return Unit.Value;
+                }
+            );
     }
 
     private async Task HandleNdeaRequestAsync(PhotinoWindow window, DeaRequest data)
     {
-        var result = await _deaService.CreateNarcoticDrugEnforcementAddictionNumber(data.LastName);
-
-        if (result.IsSuccess)
-        {
-            SendSuccessResponse(window, data.RequestId, "deaNumber", 
-                result.Value.NarcoticDrugEnforcementAddictionNumber);
-        }
-        else
-        {
-            SendErrorResponse(window, data.RequestId, result.Error.Message);
-        }
+        await _deaService.CreateNarcoticDrugEnforcementAddictionNumber(data.LastName)
+            .MatchAsync(
+                response => {
+                    SendSuccessResponse(window, data.RequestId, "deaNumber",
+                        response.NarcoticDrugEnforcementAddictionNumber);
+                    return Unit.Value;
+                },
+                error => {
+                    SendErrorResponse(window, data.RequestId, error.Message);
+                    return Unit.Value;
+                }
+            );
     }
 }

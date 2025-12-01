@@ -36,17 +36,16 @@ public sealed class FileLogger : IAppLogger, IDisposable
         {
             try
             {
-                if (_logQueue.TryTake(out var logEntry, 100, _cts.Token))
+                if (!_logQueue.TryTake(out string? logEntry, 100, _cts.Token))
+                    continue;
+                
+                if (DateTime.Today != _currentLogDate)
                 {
-                    // Check if we need to rotate to a new file
-                    if (DateTime.Today != _currentLogDate)
-                    {
-                        _currentLogDate = DateTime.Today;
-                        _currentLogFile = GetLogFilePath(_currentLogDate);
-                    }
-
-                    await File.AppendAllTextAsync(_currentLogFile, logEntry + Environment.NewLine, _cts.Token);
+                    _currentLogDate = DateTime.Today;
+                    _currentLogFile = GetLogFilePath(_currentLogDate);
                 }
+
+                await File.AppendAllTextAsync(_currentLogFile, logEntry + Environment.NewLine, _cts.Token);
             }
             catch (OperationCanceledException)
             {

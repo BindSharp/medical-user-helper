@@ -1,3 +1,4 @@
+using BindSharp;
 using MedicalUsersHelper.Logs;
 using Photino.NET;
 
@@ -17,7 +18,6 @@ public sealed class MessageRouter
         _handlers = handlers;
         _logger = logger;
         
-        // Build a map of command -> handler for fast lookup
         _handlerMap = _handlers.ToDictionary(h => h.Command, h => h);
         
         _logger.LogInformation("Registered {Count} message handlers: {Commands}", 
@@ -25,50 +25,80 @@ public sealed class MessageRouter
             string.Join(", ", _handlerMap.Keys));
     }
 
-    /// <summary>
-    /// Routes a message to the appropriate handler
-    /// Format: "command:payload"
-    /// </summary>
     public void RouteMessage(PhotinoWindow window, string message)
     {
         _logger.LogDebug("Received message: {Message}", message);
 
-        if (string.IsNullOrWhiteSpace(message))
-        {
-            _logger.LogWarning("Received empty message");
-            return;
-        }
+       ValidateMessage(message)
+           .Tap(msg => _logger.LogDebug("Message validated: {Message}", msg))
+           .Bind(ParseMessage)
+           .Tap(parsed => _logger.LogDebug("Parsed command: {Command}", parsed.Command))
+           .Bind(parsed => GetHandler(parsed.Command)
+               .Map(handler => (handler, parsed.Payload)))
+           .Tap(tuple => _logger.LogDebug("Routing to {Handler} with payload: {Payload}", 
+                tuple.handler.GetType().Name, tuple.Payload))
+           .Match(
+               result =>
+               {
+                   ResultExtensions.Try(
+                        () => {
+                            result.handler.Handle(window, result.Payload);
+                            return Unit.Value;
+                        },
+                        ex => {
+                            _logger.LogError(ex, "Error handling message: {Message}", message);
+                            return $"Handler error - {ex.Message}";
+                        }
+                    ).Match(
+                        _ => Unit.Value,
+                        error => {
+                            window.SendWebMessage($"error:{error}");
+                            return Unit.Value;
+                        }
+                    );
+                    
+                    return Unit.Value;
+                },
+                error =>
+                {
+                    _logger.LogWarning("Message routing failed: {Error}", error);
+                    window.SendWebMessage($"error:{error}");
+                    return Unit.Value;
+                }
+            );
+    }
 
+    private Result<string, string> ValidateMessage(string message)
+    {
+        if (!string.IsNullOrWhiteSpace(message))
+            return Result<string, string>.Success(message);
+        
+        _logger.LogWarning("Received empty message");
+        return Result<string, string>.Failure("Empty message received");
+    }
+
+    private Result<(string Command, string Payload), string> ParseMessage(string message)
+    {
         int separatorIndex = message.IndexOf(':');
         
         if (separatorIndex == -1)
         {
             _logger.LogWarning("Invalid message format (missing ':'): {Message}", message);
-            window.SendWebMessage("error:Invalid message format. Expected 'command:payload'");
-            return;
+            return "Invalid message format. Expected 'command:payload'";
         }
 
         string command = message[..separatorIndex];
         string payload = message[(separatorIndex + 1)..];
+        
+        return (command, payload);
+    }
 
+    private Result<IMessageHandler, string> GetHandler(string command)
+    {
         if (_handlerMap.TryGetValue(command, out var handler))
-        {
-            try
-            {
-                _logger.LogDebug("Routing to {Handler} with payload: {Payload}", 
-                    handler.GetType().Name, payload);
-                handler.Handle(window, payload);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error handling message: {Message}", message);
-                window.SendWebMessage($"error:Handler error - {ex.Message}");
-            }
-        }
-        else
-        {
-            _logger.LogWarning("No handler found for command: {Command}", command);
-            window.SendWebMessage($"error:Unknown command '{command}'");
-        }
+            return Result<IMessageHandler, string>.Success(handler);
+        
+        _logger.LogWarning("No handler found for command: {Command}", command);
+        return $"Unknown command '{command}'";
     }
 }

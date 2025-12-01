@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Application.Core.DTOs.License.UI;
 using Application.Core.Interfaces.License;
+using BindSharp;
 using Infrastructure.Core.DTOs.License;
 using Photino.NET;
 
@@ -19,37 +20,48 @@ public sealed class LicenseHandler : BaseMessageHandler
 
     public override void Handle(PhotinoWindow window, string payload)
     {
-        try
-        {
-            string jsonPayload = ExtractJsonFromPayload(payload);
-            HandleRequest<LicenseRequest>(window, jsonPayload, ProcessLicenseRequest);
-        }
-        catch (Exception ex)
-        {
-            SendErrorResponse(window, 0, $"Error processing request: {ex.Message}");
-        }
+        ExtractJsonFromPayload(payload)
+            .Match(
+                jsonPayload =>
+                {
+                    HandleRequest<LicenseRequest>(window, jsonPayload, ProcessLicenseRequest);
+                    return Unit.Value;
+                },
+                error =>
+                {
+                    SendErrorResponse(window, 0, $"Error processing request: {error.Message}");
+                    return Unit.Value;
+                }
+            );
     }
 
     private async void ProcessLicenseRequest(PhotinoWindow window, LicenseRequest data)
     {
-        var licenseType = data.LicenseType.ToLowerInvariant() == "pharmacy" 
-            ? LicenseNumberType.Pharmacy 
-            : LicenseNumberType.Medical;
-
-        var result = await _licenseService.CreateLicenseNumber(
-            data.StateCode, 
-            data.LastName, 
-            licenseType
-        );
-
-        if (result.IsSuccess)
-        {
-            SendSuccessResponse(window, data.RequestId, "licenseNumber", 
-                result.Value.LicenseNumber);
-        }
-        else
-        {
-            SendErrorResponse(window, data.RequestId, result.Error.Message);
-        }
+        await _licenseService.CreateLicenseNumber(
+                data.StateCode,
+                data.LastName,
+                GetLicenseNumberType(data.LicenseType)
+            )
+            .MatchAsync(
+                response =>
+                {
+                    SendSuccessResponse(window, data.RequestId, "licenseNumber",
+                        response.LicenseNumber);
+                    return Unit.Value;
+                },
+                error =>
+                {
+                    SendErrorResponse(window, data.RequestId, error.Message);
+                    return Unit.Value;
+                }
+            );
     }
+
+    private static LicenseNumberType GetLicenseNumberType(string licenseType) =>
+        licenseType.ToLowerInvariant() switch
+        {
+            "pharmacy" => LicenseNumberType.Pharmacy,
+            "medical" => LicenseNumberType.Medical,
+            _ => LicenseNumberType.Medical
+        };
 }

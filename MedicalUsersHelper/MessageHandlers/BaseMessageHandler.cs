@@ -1,4 +1,6 @@
 using System.Text.Json;
+using BindSharp;
+using MedicalUsersHelper.DTOs;
 using MedicalUsersHelper.PhotinoHelpers;
 using Photino.NET;
 
@@ -15,62 +17,37 @@ public abstract class BaseMessageHandler : IMessageHandler
     /// <summary>
     /// Extract JSON from payload that may be in "request:id:json" format
     /// </summary>
-    protected static string ExtractJsonFromPayload(string payload)
-    {        
-        if (string.IsNullOrWhiteSpace(payload))
-        {
-            return payload;
-        }
-
-        // Check if it starts with a JSON character
-        string trimmed = payload.TrimStart();
-        if (trimmed.StartsWith("{") || trimmed.StartsWith("["))
-        {
-            // Already JSON
-            return payload;
-        }
-        
-        // Find the second colon (after "request:id:")
-        int firstColon = payload.IndexOf(':');
-        if (firstColon == -1)
-        {
-            // No colon, assume it's already JSON
-            return payload;
-        }
-
-        int secondColon = payload.IndexOf(':', firstColon + 1);
-        if (secondColon == -1)
-        {
-            // Only one colon, assume it's already JSON after first colon
-            return payload[(firstColon + 1)..];
-        }
-
-        // Return everything after the second colon
-        return payload[(secondColon + 1)..];
-    }
+    protected static Result<string, MessageHandlerError> ExtractJsonFromPayload(string payload) =>
+        ValidateIfPayloadIsEmpty(payload)
+            .Map(trimmedPayload => trimmedPayload.TrimStart())
+            .BindIf(
+                trimmed => !(trimmed.StartsWith('{') || trimmed.StartsWith('[')),
+                trimmed => ExtractJsonAfterPrefix(trimmed)
+            );
 
     /// <summary>
     /// Deserialize JSON payload and execute an action with error handling
     /// </summary>
-    protected void HandleRequest<TRequest>(PhotinoWindow window, string jsonPayload, Action<PhotinoWindow, TRequest> handler)
+    protected void HandleRequest<TRequest>(PhotinoWindow window, Result<string, MessageHandlerError> jsonPayload, Action<PhotinoWindow, TRequest> handler)
         where TRequest : class
     {
-        try
-        {
-            var data = JsonSerializer.Deserialize<TRequest>(jsonPayload);
-            
-            if (data is null)
-            {
-                window.SendError($"{Command}:response:0", "Invalid request data");
-                return;
-            }
-
-            handler(window, data);
-        }
-        catch (Exception ex)
-        {
-            window.SendError($"{Command}:response:0", $"Error processing request: {ex.Message}");
-        }
+        jsonPayload
+            .MapError(err => err.Message)
+            .Bind(json => ResultExtensions.Try(
+                () => JsonSerializer.Deserialize<TRequest>(json),
+                ex => $"Deserialization failed: {ex.Message}"
+            ))
+            .EnsureNotNull("Invalid request data")
+            .Match(
+                data => {
+                    handler(window, data);
+                    return Unit.Value;
+                },
+                error => {
+                    window.SendError($"{Command}:response:0", error);
+                    return Unit.Value;
+                }
+            );
     }
 
     /// <summary>
@@ -95,5 +72,25 @@ public abstract class BaseMessageHandler : IMessageHandler
             success = false,
             error = errorMessage
         });
+    }
+
+    private static Result<string, MessageHandlerError> ValidateIfPayloadIsEmpty(string payload) =>
+        string.IsNullOrEmpty(payload) || string.IsNullOrWhiteSpace(payload)
+            ? new EmptyPayloadError()
+            : payload;
+
+    private static Result<string, MessageHandlerError> ExtractJsonAfterPrefix(string payload)
+    {
+        int firstColon = payload.IndexOf(':');
+        if (firstColon == -1)
+        {
+            return payload;
+        }
+
+        int secondColon = payload.IndexOf(':', firstColon + 1);
+        
+        return secondColon == -1
+            ? payload[(firstColon + 1)..]
+            : payload[(secondColon + 1)..];
     }
 }

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Application.Core.DTOs.NationalProviderIdentifier.UI;
 using Application.Core.Interfaces.NationalProviderIdentifier;
+using BindSharp;
 using Photino.NET;
 
 namespace MedicalUsersHelper.MessageHandlers.Handlers;
@@ -18,66 +19,82 @@ public sealed class NpiHandler : BaseMessageHandler
 
     public override void Handle(PhotinoWindow window, string payload)
     {
-        try
+        var jsonPayload = ExtractJsonFromPayload(payload);
+    
+        var handlers = new Dictionary<string, Action>
         {
-            var jsonPayload = ExtractJsonFromPayload(payload);
-            
-            using var jsonDoc = JsonDocument.Parse(jsonPayload);
-            var root = jsonDoc.RootElement;
-            
-            if (!root.TryGetProperty("action", out var actionProp))
+            ["validate"] = () => HandleRequest<NpiValidateRequest>(window, jsonPayload, ProcessValidateRequest),
+            ["generate"] = () => HandleRequest<NpiGenerateRequest>(window, jsonPayload, ProcessGenerateRequest)
+        };
+    
+        jsonPayload
+            .MapError(err => err.Message)
+            .Bind(json => ResultExtensions.Try(
+                () => JsonDocument.Parse(json),
+                ex => $"JSON parsing failed: {ex.Message}"
+            ))
+            .Using(jsonDoc => 
             {
-                SendErrorResponse(window, 0, "Missing action property");
-                return;
-            }
-
-            var action = actionProp.GetString();
+                JsonElement root = jsonDoc.RootElement;
             
-            switch (action)
-            {
-                case "validate":
-                    HandleRequest<NpiValidateRequest>(window, jsonPayload, ProcessValidateRequest);
-                    break;
-                case "generate":
-                    HandleRequest<NpiGenerateRequest>(window, jsonPayload, ProcessGenerateRequest);
-                    break;
-                default:
-                    SendErrorResponse(window, 0, "Unknown action");
-                    break;
-            }
-        }
-        catch (Exception ex)
-        {
-            SendErrorResponse(window, 0, $"Error processing request: {ex.Message}");
-        }
+                if (!root.TryGetProperty("action", out var actionProp))
+                    return Result<string, string>.Failure("Missing action property");
+            
+                string? action = actionProp.GetString();
+                return !string.IsNullOrEmpty(action)
+                    ? Result<string, string>.Success(action)
+                    : Result<string, string>.Failure("Action property is null");
+            })
+            .Bind(action => handlers.ContainsKey(action)
+                ? Result<string, string>.Success(action)
+                : Result<string, string>.Failure("Unknown action")
+            )
+            .Match(
+                action =>
+                {
+                    handlers[action]();
+                    return Unit.Value;
+                },
+                error =>
+                {
+                    SendErrorResponse(window, 0, error);
+                    return Unit.Value;
+                }
+            );
     }
 
     private async void ProcessGenerateRequest(PhotinoWindow window, NpiGenerateRequest data)
     {
-        var result = await _npiService.CreateNationalProviderIdentifier(data.IsOrganization);
-
-        if (result.IsSuccess)
-        {
-            SendSuccessResponse(window, data.RequestId, "npi", 
-                result.Value.NationalProviderIdentifier);
-        }
-        else
-        {
-            SendErrorResponse(window, data.RequestId, result.Error.Message);
-        }
+        await _npiService.CreateNationalProviderIdentifier(data.IsOrganization)
+            .MatchAsync(
+                response =>
+                {
+                    SendSuccessResponse(window, data.RequestId, "npi",
+                        response.NationalProviderIdentifier);
+                    return Unit.Value;
+                },
+                error =>
+                {
+                    SendErrorResponse(window, data.RequestId, error.Message);
+                    return Unit.Value;
+                }
+            );
     }
 
     private void ProcessValidateRequest(PhotinoWindow window, NpiValidateRequest data)
     {
-        var result = _npiService.ValidateNpi(data.Npi);
-
-        if (result.IsSuccess)
-        {
-            SendSuccessResponse(window, data.RequestId, "isValid", result.Value.isValid);
-        }
-        else
-        {
-            SendErrorResponse(window, data.RequestId, result.Error.Message);
-        }
+        _npiService.ValidateNpi(data.Npi)
+            .Match(
+                response =>
+                {
+                    SendSuccessResponse(window, data.RequestId, "isValid", response.isValid);
+                    return Unit.Value;
+                },
+                    error =>
+                {
+                    SendErrorResponse(window, data.RequestId, error.Message);
+                    return Unit.Value;
+                }
+            );
     }
 }
