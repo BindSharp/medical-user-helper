@@ -7,12 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="BindSharp" Version="1.6.0" />
+      <ProjectReference Include="..\Infrastructure.Core.DTOs\Infrastructure.Core.DTOs.csproj" />
+      <ProjectReference Include="..\Infrastructure.Core.Models\Infrastructure.Core.Models.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Infrastructure.Core.DTOs\Infrastructure.Core.DTOs.csproj" />
-      <ProjectReference Include="..\Infrastructure.Core.Models\Infrastructure.Core.Models.csproj" />
+      <PackageReference Include="BindSharp" Version="1.6.0" />
     </ItemGroup>
 
 </Project>
