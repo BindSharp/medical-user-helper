@@ -33,10 +33,12 @@ public sealed class MessageRouter
            .Tap(msg => _logger.LogDebug("Message validated: {0}", msg))
            .Bind(ParseMessage)
            .Tap(parsed => _logger.LogDebug("Parsed command: {0}", parsed.Command))
+           .TapError(error => _logger.LogWarning("Invalid format: {0}", error))
            .Bind(parsed => GetHandler(parsed.Command)
                .Map(handler => (handler, parsed.Payload)))
            .Tap(tuple => _logger.LogDebug("Routing to {0} with payload: {1}", 
                 tuple.handler.GetType().Name, tuple.Payload))
+           .TapError(error => _logger.LogWarning("Error handling message: {0}", error))
            .Match(
                result =>
                {
@@ -44,12 +46,11 @@ public sealed class MessageRouter
                         () => {
                             result.handler.Handle(window, result.Payload);
                             return Unit.Value;
-                        },
-                        ex => {
-                            _logger.LogError(ex, "Error handling message: {0}", message);
-                            return $"Handler error - {ex.Message}";
                         }
-                    ).Match(
+                    )
+                    .TapError(ex => _logger.LogError(ex, "Error handling message: {0}", message))
+                    .MapError(ex => $"Handler error - {ex.Message}")
+                    .Match(
                         _ => Unit.Value,
                         error => {
                             window.SendWebMessage($"error:{error}");
@@ -83,8 +84,7 @@ public sealed class MessageRouter
         
         if (separatorIndex == -1)
         {
-            _logger.LogWarning("Invalid message format (missing ':'): {0}", message);
-            return "Invalid message format. Expected 'command:payload'";
+            return $"Invalid message format. Expected 'command:payload'";
         }
 
         string command = message[..separatorIndex];

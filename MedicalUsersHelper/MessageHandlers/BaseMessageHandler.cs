@@ -45,15 +45,15 @@ public abstract class BaseMessageHandler : IMessageHandler
                 ex => $"Deserialization failed: {ex.Message}"
             ))
             .EnsureNotNull("Invalid request data")
+            .Tap(result => _logger.LogDebug($"Request successful: {Command}:response:0:{{0}}", result))
+            .TapError(error => _logger.LogDebug($"Error handling request: {Command}:response:0:{{0}}", error))
             .Match(
                 data => {
                     handler(window, data);
-                    _logger.LogDebug($"Request successful: {Command}:response:0:{{0}}", data);
                     return Unit.Value;
                 },
                 error => {
                     window.SendError(_logger, $"{Command}:response:0", error);
-                    _logger.LogDebug($"Error handling request: {Command}:response:0:{{0}}", error);
                     return Unit.Value;
                 }
             );
