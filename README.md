@@ -182,32 +182,40 @@ public async Task<Result<CreateLicenseNumberResponse, LicenseNumberError>>
 
 ---
 
-### 4. **Observability with `Tap` and `TapError`**
+### 4. **Observability with `Tap` and `Do`**
 
 Track what's happening without breaking the pipeline:
 ```csharp
 public void RouteMessage(PhotinoWindow window, string message)
-{
-    ValidateMessage(message)
-        .Tap(msg => _logger.LogDebug("Message validated: {0}", msg))  // ✅ Success logging
-        .Bind(ParseMessage)
-        .Tap(parsed => _logger.LogDebug("Parsed command: {0}", parsed.Command))  // ✅ Success logging
-        .TapError(error => _logger.LogWarning("Invalid format: {0}", error))  // ⚠️ Error logging
-        .Bind(parsed => GetHandler(parsed.Command)
-            .Map(handler => (handler, parsed.Payload)))
-        .Tap(tuple => _logger.LogDebug("Routing to {0}", tuple.handler.GetType().Name))  // ✅ Success logging
-        .TapError(error => _logger.LogWarning("Error handling message: {0}", error))  // ⚠️ Error logging
-        .Match(
-            result => ExecuteHandler(window, result),
-            error => HandleError(window, error)
-        );
-}
+    {
+       ValidateMessage(message)
+           .Tap(msg => _logger.LogDebug("Message validated: {0}", msg))
+           .Bind(ParseMessage)
+           .Do(
+               parsedResult =>_logger.LogDebug("Parsed command: {0}", parsedResult.Command),
+               error => _logger.LogWarning("Invalid format: {0}", error)
+               )
+           .Bind(parsed => GetHandler(parsed.Command)
+               .Map(handler => (handler, parsed.Payload)))
+           .Do(
+               tuple => _logger.LogDebug("Routing to {0} with payload: {1}", tuple.handler.GetType().Name, tuple.Payload),
+               error => _logger.LogWarning("Error handling message: {0}", error)
+               )
+           .Bind(tuple => ExecuteHandler(window, tuple.handler, tuple.Payload))
+           .Do(
+               _ => _logger.LogDebug("Message handled successfully"),
+               error => {
+                   _logger.LogWarning("Message routing failed: {0}", error);
+                   window.SendWebMessage($"error:{error}");
+               }
+           );
+    }
 ```
 
 **Why this is powerful:**
 - 📊 Full observability throughout the pipeline
 - ✅ `Tap` executes only on success
-- ⚠️ `TapError` executes only on failure
+- ⚠️ `Do` executes the success or failure cases
 - 🔄 Result flows through unchanged
 - 🎯 Clean separation: logging vs business logic
 
@@ -324,7 +332,7 @@ BindSharp flows through every layer:
 │                  MessageRouter                          │
 │   ValidateMessage → ParseMessage → GetHandler           │
 │        .Tap(log) → .TapError(log) → .Match()            │
-│                                                          │
+│                                                         │
 │   Pattern: Message routing with full observability      │
 └────────────────────┬────────────────────────────────────┘
                      │ Result<Command, MessageError>
@@ -334,7 +342,7 @@ BindSharp flows through every layer:
 │   - NationalProviderIdentifierService                   │
 │   - DrugEnforcementAdministrationService                │
 │   - LicenseNumberService                                │
-│                                                          │
+│                                                         │
 │   Pattern: Validation chains with .Ensure()             │
 │   Pattern: Multi-step workflows with .Bind/.BindAsync   │
 └────────────────────┬────────────────────────────────────┘
@@ -344,7 +352,7 @@ BindSharp flows through every layer:
 │             Infrastructure Layer                        │
 │   - Repositories (Dapper + SQLite)                      │
 │   - BaseDatabaseService                                 │
-│                                                          │
+│                                                         │
 │   Pattern: Exception handling with .TryAsync()          │
 │   Pattern: Generic validation with ValidateAffectedRows │
 └─────────────────────────────────────────────────────────┘
@@ -353,21 +361,24 @@ BindSharp flows through every layer:
 **Every layer returns `Result<T, TError>`** - errors flow naturally up the stack.
 
 ---
+## 📚 Complete BindSharp v2.0 Patterns Reference
 
-## 📚 Complete BindSharp Patterns Reference
-
-| Pattern | When to Use | Example Location |
-|---------|-------------|------------------|
-| **`Ensure`** | Validation chains | `NationalProviderIdentifierService.ValidateNpi` |
-| **`TryAsync`** | Exception handling | `NationalProviderIdentifierRepository.AddAsync` |
-| **`Bind` / `BindAsync`** | Chain operations that can fail | `DrugEnforcementAdministrationService` |
-| **`Map` / `MapAsync`** | Transform success values | Throughout service layer |
-| **`MapError`** | Convert error types | `LicenseNumberService.CreateLicenseNumber` |
-| **`Tap` / `TapAsync`** | Success side effects (logging) | `MessageRouter.RouteMessage` |
-| **`TapError` / `TapErrorAsync`** | Error side effects (logging) | `MessageRouter.RouteMessage` |
-| **`BindIf`** | Conditional processing | `MessageHandler.ExtractJsonFromPayload` |
-| **`Match`** | Handle both tracks | UI boundary, message routing |
-| **`Unit`** | Operations with no return value | Database operations |
+| Pattern | Version | When to Use | Example Location |
+|---------|---------|-------------|------------------|
+| **Custom Error Types** | v1.3.0 | Enable implicit conversions | `MessageError`, domain error records |
+| **Implicit Conversions** | v1.3.0 | Reduce boilerplate | Throughout all layers |
+| **`Ensure`** | v1.1.0 | Validation chains | `NationalProviderIdentifierService.ValidateNpi` |
+| **`Try` / `TryAsync`** | v1.1.0 | Exception handling with custom errors | Most repository methods |
+| **Exception-First Try** | v1.6.0 | Log exceptions before transforming | `NationalProviderIdentifierRepository.AddAsync` |
+| **`Bind` / `BindAsync`** | Core | Chain operations that can fail | Throughout service layer |
+| **`Map` / `MapAsync`** | Core | Transform success values | Throughout service layer |
+| **`MapError`** | Core | Convert error types | `LicenseNumberService.CreateLicenseNumber` |
+| **`Tap` / `TapAsync`** | v1.1.0 | Success side effects (logging) | `MessageRouter.RouteMessage` |
+| **`TapError` / `TapErrorAsync`** | v1.5.0 | Error side effects (logging) | `ExecuteHandler` method |
+| **`Do` / `DoAsync`** | **v2.0.0** | **Dual side effects** | `MessageRouter.RouteMessage` |
+| **`BindIf`** | v1.4.1 | Conditional processing | `MessageHandler.ExtractJsonFromPayload` |
+| **`Match`** | Core | Handle both tracks | UI boundary, message routing |
+| **`Unit`** | v1.2.0 | Operations with no return value | Database operations |
 
 ---
 
