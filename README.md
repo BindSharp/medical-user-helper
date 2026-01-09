@@ -127,7 +127,7 @@ With BindSharp's `TryAsync`:
 // ✅ The BindSharp way - exceptions become typed errors
 public async Task<Result<Unit, NationalProviderIdentifierError>> 
     AddAsync(NationalProviderIdentifierNumber npiNumber) =>
-    await ResultExtensions.TryAsync(
+    await Result.TryAsync(
             operation: async () => await ExecuteNonQueryAsync(
                 _connection, NationalProviderIdentifierSql.Insert, npiNumber),
             errorFactory: ex => new NationalProviderIdentifierInsertError(ex.Message, ex)
