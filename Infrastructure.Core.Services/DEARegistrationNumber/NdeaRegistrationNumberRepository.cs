@@ -16,7 +16,7 @@ public sealed class NdeaRegistrationNumberRepository : BaseDatabaseService, INde
     }
     
     public async Task<Result<Unit, NdeaRegistrationNumberError>> AddAsync(NarcoticDrugEnforcementAddictionNumber ndeaNumber) =>
-        await ResultExtensions.TryAsync(
+        await Result.TryAsync(
                 operation: async () => await ExecuteNonQueryAsync(_connection, NdeaRegistrationNumberSql.Insert, new
                 {
                     NdeaRegistrationNumberId = ndeaNumber.NarcoticDrugEnforcementAddictionNumberId,

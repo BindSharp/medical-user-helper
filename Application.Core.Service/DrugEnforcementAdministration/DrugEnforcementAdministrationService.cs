@@ -62,10 +62,10 @@ public sealed class DrugEnforcementAdministrationService : BaseService, IDrugEnf
     }
 
     private static string GenerateDeaNumber(string lastName) {
-        var registrantType = DeaRegistrantTypes[Random.Shared.Next(DeaRegistrantTypes.Length)];
-        var lastNameInitial = char.ToUpper(lastName[0]);
-        var sixDigits = Random.Shared.Next(100000, 999999).ToString();
-        var checksum = CalculateDeaChecksum(sixDigits);
+        char registrantType = DeaRegistrantTypes[Random.Shared.Next(DeaRegistrantTypes.Length)];
+        char lastNameInitial = char.ToUpper(lastName[0]);
+        string sixDigits = Random.Shared.Next(100000, 999999).ToString();
+        int checksum = CalculateDeaChecksum(sixDigits);
         
         return string.Create(9, (registrantType, lastNameInitial, sixDigits, checksum), 
             (span, state) =>
@@ -80,18 +80,18 @@ public sealed class DrugEnforcementAdministrationService : BaseService, IDrugEnf
     private static int CalculateDeaChecksum(string sixDigits)
     {
         // Add the 1st, 3rd, and 5th digits
-        var sum1 = (sixDigits[0] - '0') + (sixDigits[2] - '0') + (sixDigits[4] - '0');
+        int sum1 = (sixDigits[0] - '0') + (sixDigits[2] - '0') + (sixDigits[4] - '0');
         // Add the 2nd, 4th, and 6th digits and multiply by 2
-        var sum2 = ((sixDigits[1] - '0') + (sixDigits[3] - '0') + (sixDigits[5] - '0')) * 2;
+        int sum2 = ((sixDigits[1] - '0') + (sixDigits[3] - '0') + (sixDigits[5] - '0')) * 2;
         // The checksum is the last digit of the total return total % 10;
         return (sum1 + sum2) % 10;
     }
     
     private static string GenerateNdeaNumber(string lastName) {
-        var registrantType = NdearegistrantTypes[Random.Shared.Next(NdearegistrantTypes.Length)];
-        var lastNameInitial = char.ToUpper(lastName[0]);
-        var sixDigits = Random.Shared.Next(100000, 999999).ToString();
-        var checksum = CalculateDeaChecksum(sixDigits);
+        char registrantType = NdearegistrantTypes[Random.Shared.Next(NdearegistrantTypes.Length)];
+        char lastNameInitial = char.ToUpper(lastName[0]);
+        string sixDigits = Random.Shared.Next(100000, 999999).ToString();
+        int checksum = CalculateDeaChecksum(sixDigits);
         
         return string.Create(9, (registrantType, lastNameInitial, sixDigits, checksum), 
             (span, state) =>

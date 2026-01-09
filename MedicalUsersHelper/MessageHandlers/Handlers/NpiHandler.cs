@@ -2,6 +2,7 @@ using System.Text.Json;
 using Application.Core.DTOs.NationalProviderIdentifier.UI;
 using Application.Core.Interfaces.NationalProviderIdentifier;
 using BindSharp;
+using BindSharp.Extensions;
 using MedicalUsersHelper.Logs;
 using Photino.NET;
 
@@ -33,7 +34,7 @@ public sealed class NpiHandler : BaseMessageHandler
     
         jsonPayload
             .MapError(err => err.Message)
-            .Bind(json => ResultExtensions.Try(
+            .Bind(json => Result.Try(
                 () => JsonDocument.Parse(json),
                 ex => $"JSON parsing failed: {ex.Message}"
             ))
@@ -53,52 +54,23 @@ public sealed class NpiHandler : BaseMessageHandler
                 ? Result<string, string>.Success(action)
                 : Result<string, string>.Failure("Unknown action")
             )
-            .Match(
-                action =>
-                {
-                    handlers[action]();
-                    return Unit.Value;
-                },
-                error =>
-                {
-                    SendErrorResponse(window, 0, error);
-                    return Unit.Value;
-                }
+            .Do(
+                action => handlers[action](),
+                error => SendErrorResponse(window, 0, error)
             );
     }
 
-    private async void ProcessGenerateRequest(PhotinoWindow window, NpiGenerateRequest data)
-    {
+    private async void ProcessGenerateRequest(PhotinoWindow window, NpiGenerateRequest data) =>
         await _npiService.CreateNationalProviderIdentifier(data.IsOrganization)
-            .MatchAsync(
-                response =>
-                {
-                    SendSuccessResponse(window, data.RequestId, "npi",
-                        response.NationalProviderIdentifier);
-                    return Unit.Value;
-                },
-                error =>
-                {
-                    SendErrorResponse(window, data.RequestId, error.Message);
-                    return Unit.Value;
-                }
+            .DoAsync(
+                response => SendSuccessResponse(window, data.RequestId, "npi", response.NationalProviderIdentifier),
+                error => SendErrorResponse(window, data.RequestId, error.Message)
             );
-    }
 
-    private void ProcessValidateRequest(PhotinoWindow window, NpiValidateRequest data)
-    {
+    private void ProcessValidateRequest(PhotinoWindow window, NpiValidateRequest data) =>
         _npiService.ValidateNpi(data.Npi)
-            .Match(
-                response =>
-                {
-                    SendSuccessResponse(window, data.RequestId, "isValid", response.isValid);
-                    return Unit.Value;
-                },
-                    error =>
-                {
-                    SendErrorResponse(window, data.RequestId, error.Message);
-                    return Unit.Value;
-                }
+            .Do(
+                response => SendSuccessResponse(window, data.RequestId, "isValid", response.isValid),
+                error => SendErrorResponse(window, data.RequestId, error.Message)
             );
-    }
 }

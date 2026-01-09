@@ -16,7 +16,7 @@ public sealed class NationalProviderIdentifierRepository : BaseDatabaseService, 
     }
     
     public async Task<Result<Unit, NationalProviderIdentifierError>> AddAsync(NationalProviderIdentifierNumber npiNumber) =>
-        await ResultExtensions.TryAsync(
+        await Result.TryAsync(
                 operation: async () => await ExecuteNonQueryAsync(_connection, NationalProviderIdentifierSql.Insert, npiNumber),
                 errorFactory: NationalProviderIdentifierError (ex) => new NationalProviderIdentifierInsertError(ex.Message, ex)
             )
@@ -26,7 +26,7 @@ public sealed class NationalProviderIdentifierRepository : BaseDatabaseService, 
             ));
 
     public async Task<Result<IEnumerable<NationalProviderIdentifierNumber>, NationalProviderIdentifierError>> GetAllAsync() =>
-        await ResultExtensions.TryAsync(
+        await Result.TryAsync(
                 operation: async () => await ExecuteQueryAsync<NationalProviderIdentifierNumber>(_connection, NationalProviderIdentifierSql.GetAll),
                 errorFactory: NationalProviderIdentifierError (ex) => new GetAllNationalProviderIdentifiersError(ex.Message, ex)
             );

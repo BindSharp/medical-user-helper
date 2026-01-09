@@ -4,7 +4,7 @@ using Dapper;
 
 namespace Infrastructure.Core.Services;
 
-public class BaseDatabaseService
+public abstract class BaseDatabaseService
 {
     protected static Result<Unit, TError> ValidateAffectedRows<TError>(
         int affectedRows,

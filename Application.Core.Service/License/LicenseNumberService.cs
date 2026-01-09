@@ -46,7 +46,7 @@ public sealed class LicenseNumberService : BaseService, ILicenseNumber
 
     private static string GenerateMedicalLicense(string stateCode, string lastName)
     {
-        var lastNameInitial = char.ToUpper(lastName[0]);
+        char lastNameInitial = char.ToUpper(lastName[0]);
     
         return stateCode switch
         {
@@ -60,7 +60,7 @@ public sealed class LicenseNumberService : BaseService, ILicenseNumber
 
     private static string GeneratePharmacyLicense(string stateCode, string lastName)
     {
-        var lastNameInitial = char.ToUpper(lastName[0]);
+        char lastNameInitial = char.ToUpper(lastName[0]);
     
         return stateCode switch
         {
@@ -74,15 +74,15 @@ public sealed class LicenseNumberService : BaseService, ILicenseNumber
     
     private static string GenerateLicenseWithChecksum(string prefix, int digitCount, char initial)
     {
-        var digits = Random.Shared.Next((int)Math.Pow(10, digitCount - 1), (int)Math.Pow(10, digitCount)).ToString();
-        var checksum = CalculateLicenseChecksum(digits);
+        string digits = Random.Shared.Next((int)Math.Pow(10, digitCount - 1), (int)Math.Pow(10, digitCount)).ToString();
+        int checksum = CalculateLicenseChecksum(digits);
     
-        var totalLength = prefix.Length + 1 + digitCount + 1;
+        int totalLength = prefix.Length + 1 + digitCount + 1;
     
         return string.Create(totalLength, (prefix, initial, digits, checksum), 
             (span, state) =>
             {
-                var pos = 0;
+                int pos = 0;
             
                 if (state.prefix.Length > 0)
                 {
@@ -101,10 +101,10 @@ public sealed class LicenseNumberService : BaseService, ILicenseNumber
     
     private static int CalculateLicenseChecksum(string digits)
     {
-        var sum = 0;
-        for (var i = 0; i < digits.Length; i++)
+        int sum = 0;
+        for (int i = 0; i < digits.Length; i++)
         {
-            var digit = digits[i] - '0';
+            int digit = digits[i] - '0';
             sum += (i % 2 == 0) ? digit * 2 : digit;
         }
         return sum % 10;

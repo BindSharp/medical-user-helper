@@ -1,4 +1,5 @@
 using BindSharp;
+using BindSharp.Extensions;
 using MedicalUsersHelper.Logs;
 using Photino.NET;
 
@@ -32,41 +33,24 @@ public sealed class MessageRouter
        ValidateMessage(message)
            .Tap(msg => _logger.LogDebug("Message validated: {0}", msg))
            .Bind(ParseMessage)
-           .Tap(parsed => _logger.LogDebug("Parsed command: {0}", parsed.Command))
-           .TapError(error => _logger.LogWarning("Invalid format: {0}", error))
+           .Do(
+               parsedResult =>_logger.LogDebug("Parsed command: {0}", parsedResult.Command),
+               error => _logger.LogWarning("Invalid format: {0}", error)
+               )
            .Bind(parsed => GetHandler(parsed.Command)
                .Map(handler => (handler, parsed.Payload)))
-           .Tap(tuple => _logger.LogDebug("Routing to {0} with payload: {1}", 
-                tuple.handler.GetType().Name, tuple.Payload))
-           .TapError(error => _logger.LogWarning("Error handling message: {0}", error))
-           .Match(
-               result =>
-               {
-                   ResultExtensions.Try(
-                        () => {
-                            result.handler.Handle(window, result.Payload);
-                            return Unit.Value;
-                        }
-                    )
-                    .TapError(ex => _logger.LogError(ex, "Error handling message: {0}", message))
-                    .MapError(ex => $"Handler error - {ex.Message}")
-                    .Match(
-                        _ => Unit.Value,
-                        error => {
-                            window.SendWebMessage($"error:{error}");
-                            return Unit.Value;
-                        }
-                    );
-                    
-                    return Unit.Value;
-                },
-                error =>
-                {
-                    _logger.LogWarning("Message routing failed: {0}", error);
-                    window.SendWebMessage($"error:{error}");
-                    return Unit.Value;
-                }
-            );
+           .Do(
+               tuple => _logger.LogDebug("Routing to {0} with payload: {1}", tuple.handler.GetType().Name, tuple.Payload),
+               error => _logger.LogWarning("Error handling message: {0}", error)
+               )
+           .Bind(tuple => ExecuteHandler(window, tuple.handler, tuple.Payload))
+           .Do(
+               _ => _logger.LogDebug("Message handled successfully"),
+               error => {
+                   _logger.LogWarning("Message routing failed: {0}", error);
+                   window.SendWebMessage($"error:{error}");
+               }
+           );
     }
 
     private Result<string, string> ValidateMessage(string message)
@@ -100,5 +84,16 @@ public sealed class MessageRouter
         
         _logger.LogWarning("No handler found for command: {0}", command);
         return $"Unknown command '{command}'";
+    }
+    
+    private Result<Unit, string> ExecuteHandler(PhotinoWindow window, IMessageHandler handler, string payload)
+    {
+        return Result.Try(() => {
+                handler.Handle(window, payload);
+                return Unit.Value;
+            })
+            .TapError(ex => _logger.LogError(ex, "Handler execution failed"))
+            .TapError(ex => window.SendWebMessage($"error:{ex.Message}"))
+            .MapError(ex => $"Handler error - {ex.Message}");
     }
 }

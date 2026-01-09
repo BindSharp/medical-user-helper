@@ -3,6 +3,7 @@ using System.Text;
 using Application.Core.DTOs.NationalProviderIdentifier;
 using Application.Core.Interfaces.NationalProviderIdentifier;
 using BindSharp;
+using BindSharp.Extensions;
 using Infrastructure.Core.DTOs.NationalProviderIdentifier;
 using Infrastructure.Core.Interfaces.NationalProviderIdentifier;
 using Infrastructure.Core.Models.NationalProviderIdentifier;

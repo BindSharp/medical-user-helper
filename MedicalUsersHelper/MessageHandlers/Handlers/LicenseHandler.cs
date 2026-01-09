@@ -1,7 +1,7 @@
-using System.Text.Json;
 using Application.Core.DTOs.License.UI;
 using Application.Core.Interfaces.License;
 using BindSharp;
+using BindSharp.Extensions;
 using Infrastructure.Core.DTOs.License;
 using MedicalUsersHelper.Logs;
 using Photino.NET;
@@ -22,44 +22,23 @@ public sealed class LicenseHandler : BaseMessageHandler
         _licenseService = licenseService;
     }
 
-    public override void Handle(PhotinoWindow window, string payload)
-    {
+    public override void Handle(PhotinoWindow window, string payload) =>
         ExtractJsonFromPayload(payload)
-            .Match(
-                jsonPayload =>
-                {
-                    HandleRequest<LicenseRequest>(window, jsonPayload, ProcessLicenseRequest);
-                    return Unit.Value;
-                },
-                error =>
-                {
-                    SendErrorResponse(window, 0, $"Error processing request: {error.Message}");
-                    return Unit.Value;
-                }
+            .Do(
+                jsonPayload => HandleRequest<LicenseRequest>(window, jsonPayload, ProcessLicenseRequest),
+                error => SendErrorResponse(window, 0, $"Error processing request: {error.Message}")
             );
-    }
 
-    private async void ProcessLicenseRequest(PhotinoWindow window, LicenseRequest data)
-    {
+    private async void ProcessLicenseRequest(PhotinoWindow window, LicenseRequest data) =>
         await _licenseService.CreateLicenseNumber(
                 data.StateCode,
                 data.LastName,
                 GetLicenseNumberType(data.LicenseType)
             )
-            .MatchAsync(
-                response =>
-                {
-                    SendSuccessResponse(window, data.RequestId, "licenseNumber",
-                        response.LicenseNumber);
-                    return Unit.Value;
-                },
-                error =>
-                {
-                    SendErrorResponse(window, data.RequestId, error.Message);
-                    return Unit.Value;
-                }
+            .DoAsync(
+                response => SendSuccessResponse(window, data.RequestId, "licenseNumber", response.LicenseNumber),
+                error => SendErrorResponse(window, data.RequestId, error.Message)
             );
-    }
 
     private static LicenseNumberType GetLicenseNumberType(string licenseType) =>
         licenseType.ToLowerInvariant() switch

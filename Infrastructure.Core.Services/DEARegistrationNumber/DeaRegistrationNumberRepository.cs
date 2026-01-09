@@ -16,7 +16,7 @@ public sealed class DeaRegistrationNumberRepository : BaseDatabaseService, IDeaR
     }
     
     public async Task<Result<Unit, DeaRegistrationNumberError>> AddAsync(DeaRegistrationNumber deaNumber) =>
-        await ResultExtensions.TryAsync(
+        await Result.TryAsync(
                 operation: async () => await ExecuteNonQueryAsync(_connection, DeaRegistrationNumberSql.Insert, deaNumber),
                 errorFactory: DeaRegistrationNumberError (ex) => new DeaRegistrationNumberInsertError(ex.Message, ex)
             )

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using BindSharp;
+using BindSharp.Extensions;
 using MedicalUsersHelper.DTOs;
 using MedicalUsersHelper.Logs;
 using MedicalUsersHelper.PhotinoHelpers;
@@ -40,21 +41,20 @@ public abstract class BaseMessageHandler : IMessageHandler
     {
         jsonPayload
             .MapError(err => err.Message)
-            .Bind(json => ResultExtensions.Try(
+            .Bind(json => Result.Try(
                 () => JsonSerializer.Deserialize<TRequest>(json),
                 ex => $"Deserialization failed: {ex.Message}"
             ))
             .EnsureNotNull("Invalid request data")
-            .Tap(result => _logger.LogDebug($"Request successful: {Command}:response:0:{{0}}", result))
-            .TapError(error => _logger.LogDebug($"Error handling request: {Command}:response:0:{{0}}", error))
-            .Match(
-                data => {
-                    handler(window, data);
-                    return Unit.Value;
+            .Do(result =>
+                {
+                    _logger.LogDebug($"Request successful: {Command}:response:0:{{0}}", result);
+                    handler(window, result);
                 },
-                error => {
+                error =>
+                {
+                    _logger.LogDebug($"Error handling request: {Command}:response:0:{{0}}", error);
                     window.SendError(_logger, $"{Command}:response:0", error);
-                    return Unit.Value;
                 }
             );
     }
@@ -62,26 +62,22 @@ public abstract class BaseMessageHandler : IMessageHandler
     /// <summary>
     /// Send a success response with a result value
     /// </summary>
-    protected void SendSuccessResponse<T>(PhotinoWindow window, int requestId, string propertyName, T value)
-    {
+    protected void SendSuccessResponse<T>(PhotinoWindow window, int requestId, string propertyName, T value) =>
         window.SendJsonMessage(_logger, $"{Command}:response:{requestId}", new Dictionary<string, object>
         {
             ["success"] = true,
             [propertyName] = value!
         });
-    }
 
     /// <summary>
     /// Send an error response
     /// </summary>
-    protected void SendErrorResponse(PhotinoWindow window, int requestId, string errorMessage)
-    {
+    protected void SendErrorResponse(PhotinoWindow window, int requestId, string errorMessage) =>
         window.SendJsonMessage(_logger, $"{Command}:response:{requestId}", new
         {
             success = false,
             error = errorMessage
         });
-    }
 
     private static Result<string, MessageHandlerError> ValidateIfPayloadIsEmpty(string payload) =>
         string.IsNullOrEmpty(payload) || string.IsNullOrWhiteSpace(payload)
